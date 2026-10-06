@@ -69,8 +69,7 @@ An international trade model with sectoral production linkages. It takes the tra
 
 ### A 54-second walkthrough of the transport model
 
-https://github.com/user-attachments/assets/288b2763-5534-4263-8c75-e7d6c8b660a0
-
+https://github.com/user-attachments/assets/c909a5d6-b1ef-4e0c-9c3e-79ca22095fcd
 <p align="center">
   <sub>Saudi Arabia → Switzerland oil trade · multimodal routing · infrastructure disruption · re-routing and modal substitution</sub>
 </p>
