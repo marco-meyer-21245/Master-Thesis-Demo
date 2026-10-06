@@ -37,7 +37,7 @@ GitHub native video player:
 5. Leave the URL on its own line — do not wrap it in Markdown link syntax.
 -->
 
-https://github.com/marco-meyer-21245/Master-Thesis-Demo/blob/main/assets/demo/trailer.mp4
+https://github.com/user-attachments/assets/288b2763-5534-4263-8c75-e7d6c8b660a0
 
 <p align="center">
   <sub>54-second demo · Saudi Arabia → Switzerland oil trade · multimodal routing · counterfactual disruption · re-routing</sub>
