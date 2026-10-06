@@ -7,7 +7,6 @@
 **Master's Thesis · Economics · University of Zurich**
 
 [![Status](https://img.shields.io/badge/status-active%20development-1f8a70?style=for-the-badge)](#-latest-update)
-[![Demo](https://img.shields.io/badge/demo-54%20sec-2563eb?style=for-the-badge)](#-video-demo)
 [![Focus](https://img.shields.io/badge/focus-trade%20%7C%20networks%20%7C%20risk-111827?style=for-the-badge)](#-what-the-model-does)
 
 **What happens to international trade when critical transport infrastructure becomes unavailable or dramatically more expensive?**
