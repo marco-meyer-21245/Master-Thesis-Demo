@@ -8,13 +8,13 @@
 
 <br>
 
-[![Status](https://img.shields.io/badge/STATUS-ACTIVE%20DEVELOPMENT-2da44e?style=for-the-badge)](#latest-update--marnet-upgrade)
+[![Status](https://img.shields.io/badge/STATUS-ACTIVE%20DEVELOPMENT-2da44e?style=for-the-badge)](#latest-updates)
 [![Demo](https://img.shields.io/badge/DEMO-54%20SECONDS-1f6feb?style=for-the-badge)](#video-demo)
 [![Focus](https://img.shields.io/badge/FOCUS-TRADE%20DISRUPTIONS-30363d?style=for-the-badge)](#research-objective)
 
 <br>
 
-**[Objective](#research-objective) · [Demo](#video-demo) · [Latest update](#latest-update--marnet-upgrade) · [Architecture](#model-architecture) · [Transport model](#transport-model) · [Economic model](#economic-impact) · [Data](#data-and-scale)**
+**[Objective](#research-objective) · [Demo](#video-demo) · [Latest updates](#latest-updates) · [Architecture](#model-architecture) · [Transport model](#transport-model) · [Economic model](#economic-impact) · [Data](#data-and-scale) · [References](#selected-references)**
 
 </div>
 
@@ -42,6 +42,8 @@ A global multimodal transport graph representing road, rail, air, and maritime i
 
 **Computable General Equilibrium (CGE) model**  
 An international trade model with sectoral production linkages. It takes the transport shock and propagates it through import prices, sourcing decisions, intermediate inputs, production costs, expenditure, demand, and output.
+
+The economic framework draws on **origin-differentiated demand** ([Armington, 1969](https://doi.org/10.2307/3866403)), the importance of **sectoral heterogeneity in trade** ([Ossa, 2015](https://doi.org/10.1016/j.jinteco.2015.07.002)), and **input-output linkages in quantitative trade models** ([Caliendo & Parro, 2015](https://doi.org/10.1093/restud/rdu035)).
 
 > [!NOTE]
 > **Model flow:** Physical disruption → re-routing and modal substitution → trade-cost & transport-revenue changes → economic impact
@@ -154,48 +156,86 @@ The resulting changes in generalized transport costs and transport-sector revenu
 
 ---
 
-## Latest update — MARNET upgrade
+## Latest updates
 
-### A more realistic maritime routing layer
+Two improvements to the transport model: a more geographically faithful maritime network and a recalibrated, production-integrated routing and cost system.
 
-[![Latest](https://img.shields.io/badge/LATEST-OCTOBER%202026-1f6feb?style=flat-square)](#latest-update--marnet-upgrade)
-[![Stage](https://img.shields.io/badge/STAGE-VALIDATION-d29922?style=flat-square)](#latest-update--marnet-upgrade)
+### October 2026 · Maritime network (MARNET)
 
-The current development focus is a major redesign of the maritime network. The objective is to move beyond generic sea connectivity and build routes that better reflect **where vessels can physically navigate and where commercial traffic actually travels**.
+#### Navigable shipping corridors with a smaller, more accurate graph
+
+The previous maritime representation was too coarse around canals, coastlines and narrow passages. The upgraded **MARNET** construction combines **GEBCO bathymetry**, **OpenStreetMap waterways and navigation restrictions**, and **AIS vessel-density data** (global, commercial, and oil & gas traffic).
+
+Instead of using the same resolution across the entire ocean, the pipeline uses **finer cells around constrained passages and ports** and **larger cells in open water**. It then simplifies the graph while protecting important maritime connections and preserving routed distances.
+
+This design is related to work on **bathymetry-based adaptive maritime grids** ([Choi, Lee & Kim, 2023](https://doi.org/10.1093/jcde/qwad055)) and **AIS-derived shipping networks** ([Liu et al., 2023](https://doi.org/10.1016/j.oceaneng.2022.113494)). These are methodological precedents, not validation of this specific network.
+
+**What changed**
+
+- **Bathymetry and navigability:** account for shallow water, coastlines, rivers, canals, and restricted connections.
+- **Observed traffic corridors:** use vessel-density data to inform commercially relevant sea routes, without treating density as a calibrated probability of route choice.
+- **Ports and chokepoints:** attach ports and explicitly preserve narrow passages, including Hormuz, Suez, Gibraltar, Singapore, and Panama.
+- **Adaptive simplification:** remove unnecessary offshore detail without replacing realistic maritime paths with straight-line shortcuts.
+
+**Measured results — experimental global adaptive graph**
+
+| Metric | Before | After |
+|:--|--:|--:|
+| Vertices | 4,715,627 | **2,114,825** (−55.2%) |
+| Edges | 12,126,688 | **6,004,848** (−50.5%) |
+
+The reported global simplification and validation run took **about 267 seconds** with **13.3 GB peak memory**. The candidate retained **1,983 attached ports** and **27 of 28 chokepoints**; the Bering Strait attachment remains unresolved.
+
+Shortest-path checks against the detailed graph found approximately **+0.1%** distance change at Hormuz, **+0.5%** at Suez, and **+3.4%** at Panama — showing both the accuracy of most tested passages and the remaining challenge around constrained canals.
+
+<p align="center">
+  <a href="https://github.com/user-attachments/assets/2d659501-6a95-4ab5-96a2-a32257ea222c"><img width="48%" alt="Maritime network update — image 1" src="https://github.com/user-attachments/assets/2d659501-6a95-4ab5-96a2-a32257ea222c"></a>
+  <a href="https://github.com/user-attachments/assets/d622862b-bebb-4a2b-8d2a-8a88b1bdc9dd"><img width="48%" alt="Maritime network update — image 2" src="https://github.com/user-attachments/assets/d622862b-bebb-4a2b-8d2a-8a88b1bdc9dd"></a>
+</p>
+<p align="center">
+  <a href="https://github.com/user-attachments/assets/65aafc14-0985-4d09-a0ca-21793d9325f6"><img width="48%" alt="Maritime network update — image 3" src="https://github.com/user-attachments/assets/65aafc14-0985-4d09-a0ca-21793d9325f6"></a>
+  <a href="https://github.com/user-attachments/assets/3a7a77f6-6ddd-4d6b-b9ff-793f21e5f194"><img width="48%" alt="Maritime network update — image 4" src="https://github.com/user-attachments/assets/3a7a77f6-6ddd-4d6b-b9ff-793f21e5f194"></a>
+</p>
+<p align="center"><sub>MARNET development images · click an image for the full-resolution view</sub></p>
 
 > [!NOTE]
-> The upgraded pipeline combines **bathymetry, navigation restrictions, observed traffic lanes, ports, gateways, and explicit chokepoints** before the network is integrated into the full transport model.
-
-**Bathymetry**  
-GEBCO data is used to represent the physical maritime domain and reduce routing through implausible shallow or land-constrained areas.
-
-**Navigation restrictions**  
-Coastlines, narrow channels, barriers, and other navigational constraints restrict which maritime connections are physically admissible.
-
-**Traffic lanes**  
-AIS / ship-density information identifies heavily used commercial corridors. These observations help the network reproduce realistic shipping patterns instead of relying only on geometric shortest paths.
-
-**Ports and gateways**  
-Ports are explicitly attached to the maritime graph. Narrow passages use gateway structures so that connectivity is preserved through realistic entrances and exits.
-
-**Chokepoints**  
-Strategic passages such as Suez, Panama, Gibraltar, Singapore, the Gulf of Aden, and the Turkish Straits are represented and tested explicitly because they are central to counterfactual disruption analysis.
-
-The upgraded network is validated region by region before replacing the current production maritime layer.
+> **Implementation status:** The 2.11-million-vertex adaptive graph is a separately staged and validated **experimental candidate**, not the same artifact as the maritime layer in the deployed V5 multimodal graph. Integration and further navigational validation remain ongoing.
 
 <br>
 
-<p align="center">
-  <img src="assets/latest/marnet-01.png" width="31%" alt="MARNET upgrade overview">
-  &nbsp;
-  <img src="assets/latest/marnet-02.png" width="31%" alt="MARNET maritime routing detail">
-  &nbsp;
-  <img src="assets/latest/marnet-03.png" width="31%" alt="MARNET chokepoint validation">
-</p>
+### October 2026 · Transport-cost inference and pathing (V5)
 
-<p align="center">
-  <sub>Latest development snapshots · maritime network construction and validation</sub>
-</p>
+#### From independently observed freight costs to validated multimodal routing
+
+The second update connects empirical freight-market evidence with a corrected physical routing system. The previous model relied too heavily on indirect transport-cost estimates, and some road, rail and customs costs produced implausible route or modal choices.
+
+**Cost inference.** The new V5 model combines independent freight evidence — **CNR and Eurostat for road, US STB waybills for rail, BTS Form 41 for air, and UNCTAD maritime freight reports** — with UNCTAD **CIF–FOB** observations. Bayesian regularization helps retain economically plausible coefficients where the data cannot separately identify fixed, distance-related, and value-related costs.
+
+The approach builds on the distinction between directly observed and inferred **trade costs** ([Anderson & van Wincoop, 2004](https://doi.org/10.1257/0022051042177649)), the **economic value of transport time** ([Hummels & Schaur, 2013](https://doi.org/10.1257/aer.103.7.2935)), and general principles of **prior-based regularization** ([Gelman et al., 2008](https://doi.org/10.1214/08-AOAS191)). The specific V5 likelihood and priors are implementation choices, not specifications taken directly from those papers.
+
+**Pathing and accounting.** The routing system now retains feasible alternatives for each customs-entry mode instead of only the few globally cheapest paths. The update also corrects **border-cost accounting**, **customs-entry mode attribution**, **historical transit restrictions**, and several geographic connectivity issues. These changes help distinguish real modal substitution from artifacts of an incomplete transport graph.
+
+**Measured calibration and validation**
+
+| Evaluation | Result |
+|:--|--:|
+| Dominant-mode accuracy, main 103-cell A+B evaluation sample | **86.4%** |
+| Dominant-mode accuracy, held-out origin–destination pairs | **81.5%** |
+| Dominant-mode accuracy, 2019 temporal holdout | **86.4%** |
+| 2019 air CIF–FOB log error, previous → posterior V5 | **1.025 → 0.962** |
+
+On the main evaluation sample, the predicted **road share was 8.6%** against **8.4% observed**, and the predicted **sea share was 79.8%** against **78.5% observed**. Correcting country-code mappings also increased 2016 processed trade observations from **8.08 million to 10.00 million**.
+
+The posterior cost estimates improve the economic grounding of the model. They do **not** improve every predictive metric: sea CIF–FOB error on the origin–destination holdout changed from **0.537 to 0.548** (worse), while the 2019 sea error changed from **0.525 to 0.522** (slightly better).
+
+**Deployment — 8 October 2026.** The validated V5 pipeline was promoted to the canonical transport graph and visualization workflow:
+
+**495,818 routing vertices · 4,320,068 routing edges · 408 population centers · 225 tests passed, 1 skipped**
+
+This deployment updates the routing graph, origin–destination context, cost models and eight map-tile layers. It establishes a more reproducible link between observed freight costs, physically feasible route choices, and the trade-cost shocks required by the economic model.
+
+> [!NOTE]
+> Out-of-sample tests cover held-out country pairs and the year 2019. The strictest observed-mode sample remains small, and some UNCTAD mode labels are inferred or model-filled; these results should not be interpreted as validation on a large independently measured shipment dataset.
 
 <br>
 
@@ -239,7 +279,7 @@ The global transport system is represented as a directed graph:
 G=(V,E)
 ```
 
-where $`V`$ is the set of geographic nodes and $`E`$ is the set of physical transport connections.
+Here `V` represents geographic nodes and `E` represents the physical connections between them.
 
 **Critical nodes** represent economically important locations such as population centers, ports, and airports.
 
@@ -253,7 +293,7 @@ Each transport mode is first constructed separately and then connected through a
 
 ### Translating country-level economic data into geography
 
-Let $`c`$ denote a country and $`i \in \mathcal{I}_c`$ a populated 1 km² cell with population $`p_i`$ and geographic location $`x_i`$.
+Let `c` denote a country and `i` a populated 1 km² cell within that country. Each cell has a population (`p_i`) and a geographic location (`x_i`).
 
 The represented population of the country is:
 
@@ -289,35 +329,25 @@ Chains between junctions are collapsed while preserving total distance. Dead end
 
 ## 4 · Transport-cost inference
 
-### Learning monetary transport costs from observed flows
+### Combining freight-market evidence with UNCTAD observations
 
-Observed transport data provides transport expenditure $`E_n`$, transported quantity $`Q_n`$, and transport work $`W_n`$.
+The current **V5 monetary cost model** is calibrated with both independent freight-market evidence and UNCTAD CIF–FOB observations. Road, rail, air and maritime data provide empirical priors; a Bayesian posterior updates them while regularizing parameters that are weakly identified.
 
-The implied expenditure per tonne is:
-
-```math
-M_n=\frac{E_n}{Q_n}
-```
-
-and the implied transport distance is:
+The simplified per-tonne monetary specification is:
 
 ```math
-D_n=\frac{W_n}{Q_n}
+M_{n}=\alpha_{mg}+b_{mg}D_n+\rho_{mg}v_n+u_n
 ```
 
-For transport mode $`m`$ and product group $`g`$, the model estimates:
+Here `D_n` is the network-based transport distance and `v_n` is goods value per tonne. The coefficients represent fixed cost (α), the distance-related rate (b), and the value-related component (ρ). These parameters vary by mode and cargo class, with uncertainty taken into account.
+
+The underlying raw data also records shipment weight (`Q_n`), transport work (`W_n`), and expenditure (`E_n`). For observations providing these quantities, implied distance and expenditure per tonne can be expressed as:
 
 ```math
-M_n=a_{mgt}+b_{mgt}D_n+u_n
+D_n=\frac{W_n}{Q_n}, \qquad M_n=\frac{E_n}{Q_n}
 ```
 
-Product-specific estimates capture differences in transport requirements across goods. When detailed estimates are based on sparse or noisy data, they are reliability-adjusted toward broader product or mode-level estimates.
-
-The resulting monetary transport-cost function is:
-
-```math
-\hat{M}_{mgt}(D)=\hat{a}_{mgt}+\tilde{b}_{mgt}D
-```
+Observed expenditure and generalized route cost are not interchangeable: the routing objective additionally incorporates time, border, access and transfer costs, with accounting controls intended to avoid double counting.
 
 <br>
 
@@ -327,13 +357,13 @@ The resulting monetary transport-cost function is:
 
 Routing depends on more than direct transport expenditure.
 
-For edge $`e`$ and product $`g`$:
+For a transport-network edge `e` and product `g`:
 
 ```math
 G_{e,g}=M_{e,g}+H_{e,g}
 ```
 
-where $`M_{e,g}`$ is monetary transport cost and $`H_{e,g}`$ values travel time and additional delay.
+The first term is monetary transport cost; the second assigns an economic value to travel time and additional delay.
 
 A geographically short route is therefore not necessarily the economically cheapest route.
 
@@ -345,7 +375,7 @@ A geographically short route is therefore not necessarily the economically cheap
 
 The model predicts the relative attractiveness of each mode from shipment characteristics such as quantity, value density, distance, accessibility, cargo category, and interaction effects.
 
-For shipment $`n`$ and mode $`m`$:
+For an observation `n` and transport mode `m`:
 
 ```math
 U_{nm}=\alpha_m+\beta_m^\top X_n
@@ -354,10 +384,7 @@ U_{nm}=\alpha_m+\beta_m^\top X_n
 The attractiveness scores are converted into predicted modal-work shares:
 
 ```math
-\hat{s}_{nm}
-=
-\frac{\exp(U_{nm})}
-{\sum_k\exp(U_{nk})}
+\hat{s}_{nm} = \frac{\exp(U_{nm})} {\sum_k\exp(U_{nk})}
 ```
 
 The statistical layer therefore provides a plausible target modal composition for the shipment.
@@ -371,10 +398,7 @@ The statistical layer therefore provides a plausible target modal composition fo
 For each origin–destination–product pair, the model first computes the generalized-cost shortest path:
 
 ```math
-r^*
-=
-\arg\min_r
-\sum_{e\in r}G_{e,g}
+r^* = \arg\min_r \sum_{e\in r}G_{e,g}
 ```
 
 It then searches for additional mode-oriented alternatives:
@@ -384,6 +408,8 @@ It then searches for additional mode-oriented alternatives:
 ```
 
 Trade is allocated across the resulting portfolio so that the realized modal composition is as close as possible to the predicted modal shares. Among allocations with the same minimum modal mismatch, the lower-cost portfolio is selected.
+
+For an earlier example of combining a **geographic freight network, generalized costs, and modal allocation**, see [Beuthe et al. (2001)](https://doi.org/10.1016/S1366-5545(00)00022-3).
 
 > [!TIP]
 > **Statistical model:** what modal mix is plausible?  
@@ -398,20 +424,13 @@ Trade is allocated across the resulting portfolio so that the realized modal com
 A disruption changes the generalized cost of selected edges:
 
 ```math
-G_{e,g}^{1}
-=
-G_{e,g}^{0}
-+
-\Delta G_{e,g}
+G_{e,g}^{1} = G_{e,g}^{0} + \Delta G_{e,g}
 ```
 
 The route portfolio is then recomputed on the shocked network:
 
 ```math
-r^1
-=
-\arg\min_r
-\sum_{e\in r}G_{e,g}^{1}
+r^1 = \arg\min_r \sum_{e\in r}G_{e,g}^{1}
 ```
 
 Changes in mode-specific transport costs alter the relative attractiveness of the modes. Updated modal shares are therefore computed before the route-allocation problem is solved again.
@@ -484,13 +503,39 @@ Graph construction · geospatial processing · large-scale data pipelines · mul
 
 ---
 
+## Selected references
+
+The papers below provide the **economic foundations and methodological precedents** most directly related to the model. They do not imply that the thesis reproduces each paper's implementation or that its empirical validation is inherited from those studies.
+
+### Economic model
+
+- **Armington, P. S. (1969).** [A Theory of Demand for Products Distinguished by Place of Production](https://doi.org/10.2307/3866403). *IMF Staff Papers*, 16(1), 159–178. — Origin-differentiated goods and substitution in international trade.
+- **Ossa, R. (2015).** [Why Trade Matters After All](https://doi.org/10.1016/j.jinteco.2015.07.002). *Journal of International Economics*, 97(2), 266–277. — Sectoral heterogeneity and the economic importance of trade in critical industries.
+- **Caliendo, L., & Parro, F. (2015).** [Estimates of the Trade and Welfare Effects of NAFTA](https://doi.org/10.1093/restud/rdu035). *Review of Economic Studies*, 82(1), 1–44. — Quantitative trade counterfactuals with intermediate inputs and sectoral production linkages.
+
+### Maritime network and multimodal routing
+
+- **Choi, G.-H., Lee, W., & Kim, T.-W. (2023).** [Voyage Optimization Using Dynamic Programming with Initial Quadtree Based Route](https://doi.org/10.1093/jcde/qwad055). *Journal of Computational Design and Engineering*, 10(3), 1185–1203. — Adaptive bathymetric maritime-network construction.
+- **Liu, L., et al. (2023).** [Data-Driven Framework for Extracting Global Maritime Shipping Networks by Machine Learning](https://doi.org/10.1016/j.oceaneng.2022.113494). *Ocean Engineering*, 269, 113494. — Maritime network extraction from AIS observations.
+- **Beuthe, M., et al. (2001).** [Freight Transportation Demand Elasticities: A Geographic Multimodal Transportation Network Analysis](https://doi.org/10.1016/S1366-5545(00)00022-3). *Transportation Research Part E*, 37(4), 253–266. — Generalized-cost multimodal routing and freight mode allocation.
+
+### Trade costs and empirical calibration
+
+- **Anderson, J. E., & van Wincoop, E. (2004).** [Trade Costs](https://doi.org/10.1257/0022051042177649). *Journal of Economic Literature*, 42(3), 691–751. — Measurement and interpretation of trade costs.
+- **Hummels, D. L., & Schaur, G. (2013).** [Time as a Trade Barrier](https://doi.org/10.1257/aer.103.7.2935). *American Economic Review*, 103(7), 2935–2959. — The economic value of delivery time in freight transport.
+- **Gelman, A., Jakulin, A., Pittau, M. G., & Su, Y.-S. (2008).** [A Weakly Informative Default Prior Distribution for Logistic and Other Regression Models](https://doi.org/10.1214/08-AOAS191). *Annals of Applied Statistics*, 2(4), 1360–1383. — General principles of weakly informative priors and regularization; not the specific V5 prior specification.
+
+<br>
+
+---
+
 ## Project status
 
 **Active Master's thesis research.**
 
 This repository is the public-facing demonstration layer of the project. It is designed to explain the model, show the routing system in action, and communicate the counterfactual mechanism without requiring the full research environment or the underlying large-scale datasets.
 
-**Current focus:** validation and integration of the upgraded MARNET maritime network.
+**Latest progress:** V5 transport-cost inference and multimodal routing promoted on 8 October 2026; experimental adaptive MARNET construction and simplification validated separately, with further integration work ongoing.
 
 <br>
 
